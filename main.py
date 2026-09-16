@@ -1,23 +1,23 @@
-def generer():
-    print("A faire : générer une phrase")
+def generate():
+    print("TODO: generate a phrase")
 
-def importer():
-    print("A faire : importer")
+def import_phrase():
+    print("TODO: import")
 
 def main():
     while True:
-        print("1) Générer")
-        print("2) Importer")
-        print("q) Quitter")
-        choix = input("> ")
+        print("1) Generate")
+        print("2) Import")
+        print("q) Quit")
+        choice = input("> ")
 
-        if choix == "1":
-            generer()
-        elif choix == "2":
-            importer()
-        elif choix == "q":
+        if choice == "1":
+            generate()
+        elif choice == "2":
+            import_phrase()
+        elif choice == "q":
             break
         else:
-            print("Choix invalide")
+            print("Invalid choice")
 
 main()

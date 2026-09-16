@@ -1,17 +1,17 @@
 # TD02 — Wallet management (BIP 39 / BIP 32)
 
-Programme Python en ligne de commande qui génère et importe une phrase mnémonique (BIP 39)
-puis dérive les clés d'un wallet HD (BIP 32), sans librairie Bitcoin.
+Command-line Python program that generates and imports a mnemonic phrase (BIP 39)
+and then derives the keys of an HD wallet (BIP 32), without any Bitcoin library.
 
-## Lancer le programme
+## Running the program
 
-Prérequis : Python 3.9+
+Requirements: Python 3.9+
 
 ```bash
 python3 main.py
 ```
 
-## Rapport
+## Report
 
-### Étape 1 — Programme interactif
-Menu en boucle : générer une mnémonique, importer une mnémonique, dériver des clés BIP 32, quitter.
+### Step 1 — Interactive program
+Looping menu: generate a mnemonic, import a mnemonic, derive BIP 32 keys, quit.
