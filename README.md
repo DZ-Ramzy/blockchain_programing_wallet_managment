@@ -1,7 +1,9 @@
 # TD02 — Wallet management (BIP 39 / BIP 32)
 
-Command-line Python program that generates and imports a mnemonic phrase (BIP 39)
-and then derives the keys of an HD wallet (BIP 32), without any Bitcoin library.
+Command-line Python program that generates and imports a mnemonic phrase (BIP 39),
+without any Bitcoin library.
+
+BIP 32 key derivation is not implemented yet.
 
 ## Running the program
 
@@ -20,7 +22,8 @@ the program runs offline.
 Looping menu: generate a mnemonic, import a mnemonic, quit.
 
 ### Step 2 — Safe seed
-The entropy comes from `secrets.token_bytes(16)` — 128 random bits.
+The entropy comes from `secrets.token_bytes(16)` — 128 random bits, read as a
+128-bit integer.
 `secrets` draws from the OS CSPRNG, so the output cannot be replayed.
 `random` would not do: its Mersenne Twister state can be recovered from its own
 output, which would let anyone rebuild the wallet.
@@ -51,5 +54,6 @@ Checked against the official BIP 39 test vectors:
 | `ffffffffffffffffffffffffffffffff` | `zoo` x11 + `wrong` |
 | `80808080808080808080808080808080` | `letter advice cage absurd amount doctor acoustic avoid letter advice cage above` |
 
-Same result on <https://iancoleman.io/bip39/>: paste the hex into the *Entropy*
-field (type Hex, leave the passphrase empty) and the generated mnemonic matches.
+To confirm on <https://iancoleman.io/bip39/>: paste the hex printed by the program
+into the *Entropy* field (type Hex, leave the passphrase empty); the mnemonic shown
+by the site must be the same as ours.
