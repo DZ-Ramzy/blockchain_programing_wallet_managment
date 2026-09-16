@@ -12,9 +12,6 @@ def load_wordlist():
     with open(WORDLIST_FILE, encoding="utf-8") as f:
         words = f.read().split()
 
-    if len(words) != 2048:
-        raise ValueError(f"english.txt should hold 2048 words, got {len(words)}")
-
     return words
 
 
@@ -23,7 +20,6 @@ WORD_INDEX = {word: i for i, word in enumerate(WORDLIST)}
 
 
 def checksum_bits(entropy_bytes):
-    # BIP 39 : the checksum is the first ENT/32 bits of SHA-256(entropy)
     digest = hashlib.sha256(entropy_bytes).digest()
     digest_bits = "".join(format(b, "08b") for b in digest)
     return digest_bits[: len(entropy_bytes) * 8 // 32]
@@ -51,7 +47,6 @@ def mnemonic_to_entropy(words):
 
     full_bits = "".join(format(WORD_INDEX[word], "011b") for word in words)
 
-    # 33 bits per 32 bits of entropy : the tail is the checksum
     entropy_length = len(full_bits) * 32 // 33
     entropy_bits = full_bits[:entropy_length]
     given_checksum = full_bits[entropy_length:]
@@ -86,7 +81,6 @@ def show_lots(entropy_bytes):
 
 
 def generate():
-    # secrets uses the OS CSPRNG : unlike random, its output cannot be replayed
     entropy_bytes = secrets.token_bytes(ENTROPY_BITS // 8)
 
     show_entropy(entropy_bytes)
