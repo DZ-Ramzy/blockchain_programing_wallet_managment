@@ -84,10 +84,16 @@ The menu builds `m/0/0/.../N` with M levels and prints the path and the depth.
 Option 8 accepts any path, for instance `m/44'/0'/0'/0/0`.
 
 ### Verification of BIP 32
-Checked against the four official BIP 32 test vectors (seed to xprv/xpub at
-`m`, `m/0'`, `m/0'/1`, `m/0'/1/2'`, `m/0'/1/2'/2/1000000000`, …) and against the
-24 BIP 39 vectors of `trezor/python-mnemonic`, which give the seed and the root
-xprv for each mnemonic.
+`test_vectors.py` replays the four official BIP 32 test vectors (14 paths, xprv
+and xpub each) and the BIP 39 vectors, and prints `ALL PASS`:
+
+```bash
+python3 test_vectors.py
+```
+
+Vector 3 and vector 4 exist precisely to catch keys with leading zero bytes, a
+classic padding bug. The seed and the root xprv were also checked against the
+24 English vectors of `trezor/python-mnemonic`.
 
 On <https://iancoleman.io/bip39/>: paste the mnemonic, leave the passphrase
 empty, and compare with the **BIP32 Root Key** field. For a child key, use the
