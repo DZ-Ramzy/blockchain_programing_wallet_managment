@@ -1,9 +1,8 @@
 # TD02 — Wallet management (BIP 39 / BIP 32)
 
-Command-line Python program that generates and imports a mnemonic phrase (BIP 39),
-without any Bitcoin library.
-
-BIP 32 key derivation is not implemented yet.
+Command-line Python program that generates and imports a mnemonic phrase (BIP 39)
+and derives the keys of an HD wallet (BIP 32), without any Bitcoin library.
+secp256k1 and Base58Check are implemented by hand in `bip32.py`.
 
 ## Running the program
 
@@ -57,3 +56,39 @@ Checked against the official BIP 39 test vectors:
 To confirm on <https://iancoleman.io/bip39/>: paste the hex printed by the program
 into the *Entropy* field (type Hex, leave the passphrase empty); the mnemonic shown
 by the site must be the same as ours.
+
+### Step 7 — Master private key and chain code
+The mnemonic is stretched into a 64-byte seed with PBKDF2-HMAC-SHA512
+(2048 iterations, salt `"mnemonic" + passphrase`). Careful: PBKDF2 takes the
+*sentence of words*, not the entropy bytes.
+Then `I = HMAC-SHA512(key="Bitcoin seed", msg=seed)`: `I[:32]` is the master
+private key, `I[32:]` is the chain code.
+
+### Step 8 — Master public key
+`K = k * G` on secp256k1 (point addition, doubling and double-and-add written by
+hand in `bip32.py`). The key is serialized compressed: `02` or `03` depending on
+the parity of `y`, then `x` on 32 bytes.
+
+### Step 9 — Child key
+`CKDpriv` : `I = HMAC-SHA512(key=chain_code, msg=data)` where `data` is
+`serP(K_parent) || index` for a normal child, and `0x00 || k_parent || index`
+for a hardened one (`index >= 2^31`, noted `'`).
+The child key is `(I[:32] + k_parent) mod n`, the new chain code is `I[32:]`.
+
+### Step 10 — Child key at index N
+Same function called with the chosen index: path `m/N`.
+
+### Step 11 — Child key at index N at level M
+`derive()` walks the path left to right, so level M means M calls to `CKDpriv`.
+The menu builds `m/0/0/.../N` with M levels and prints the path and the depth.
+Option 8 accepts any path, for instance `m/44'/0'/0'/0/0`.
+
+### Verification of BIP 32
+Checked against the four official BIP 32 test vectors (seed to xprv/xpub at
+`m`, `m/0'`, `m/0'/1`, `m/0'/1/2'`, `m/0'/1/2'/2/1000000000`, …) and against the
+24 BIP 39 vectors of `trezor/python-mnemonic`, which give the seed and the root
+xprv for each mnemonic.
+
+On <https://iancoleman.io/bip39/>: paste the mnemonic, leave the passphrase
+empty, and compare with the **BIP32 Root Key** field. For a child key, use the
+**BIP32** tab and type the path in *BIP32 Derivation Path*.

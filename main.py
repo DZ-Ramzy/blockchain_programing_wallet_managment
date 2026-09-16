@@ -2,10 +2,14 @@ import hashlib
 import os
 import secrets
 
+import bip32
+
 ENTROPY_BITS = 128
 WORDLIST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "english.txt")
 
 VALID_WORD_COUNTS = (12, 15, 18, 21, 24)
+
+MNEMONIC = []
 
 
 def load_wordlist():
@@ -81,16 +85,21 @@ def show_lots(entropy_bytes):
 
 
 def generate():
+    global MNEMONIC
+
     entropy_bytes = secrets.token_bytes(ENTROPY_BITS // 8)
+    MNEMONIC = entropy_to_mnemonic(entropy_bytes)
 
     show_entropy(entropy_bytes)
     print()
     show_lots(entropy_bytes)
     print()
-    print("mnemonic :", " ".join(entropy_to_mnemonic(entropy_bytes)))
+    print("mnemonic :", " ".join(MNEMONIC))
 
 
 def import_phrase():
+    global MNEMONIC
+
     words = input("mnemonic > ").lower().split()
 
     try:
@@ -99,14 +108,111 @@ def import_phrase():
         print("error :", error)
         return
 
+    MNEMONIC = words
     print(f"valid mnemonic ({len(words)} words)")
     show_entropy(entropy_bytes)
 
 
+def current_seed():
+    if not MNEMONIC:
+        print("generate or import a mnemonic first")
+        return None
+
+    return bip32.seed_from_mnemonic(MNEMONIC)
+
+
+def ask_int(label):
+    try:
+        return int(input(f"{label} > "))
+    except ValueError:
+        print("error : not a number")
+        return None
+
+
+def show_key(key, path):
+    print("path        :", path)
+    print("depth       :", key.depth)
+    print("index       :", key.child_number)
+    print("private key :", key.key.hex())
+    print("chain code  :", key.chain_code.hex())
+    print("public key  :", key.public_key().hex())
+    print("xprv        :", key.xprv())
+    print("xpub        :", key.xpub())
+
+
+def derive_and_show(path):
+    seed = current_seed()
+    if seed is None:
+        return
+
+    try:
+        key = bip32.derive(seed, path)
+    except ValueError as error:
+        print("error :", error)
+        return
+
+    show_key(key, path)
+
+
+def master():
+    seed = current_seed()
+    if seed is None:
+        return
+
+    print("bip39 seed  :", seed.hex())
+    show_key(bip32.master_key(seed), "m")
+
+
+def master_public():
+    seed = current_seed()
+    if seed is None:
+        return
+
+    key = bip32.master_key(seed)
+    print("public key  :", key.public_key().hex())
+    print("xpub        :", key.xpub())
+
+
+def child():
+    derive_and_show("m/0")
+
+
+def child_at_index():
+    index = ask_int("index N")
+    if index is not None:
+        derive_and_show(f"m/{index}")
+
+
+def child_at_index_and_level():
+    level = ask_int("level M")
+    if level is None:
+        return
+
+    index = ask_int("index N")
+    if index is None:
+        return
+
+    if level < 1:
+        print("error : level must be at least 1")
+        return
+
+    derive_and_show("m" + "/0" * (level - 1) + f"/{index}")
+
+
+def custom_path():
+    derive_and_show(input("path (ex: m/44'/0'/0'/0/0) > "))
+
+
 def main():
     while True:
-        print("1) Generate")
-        print("2) Import")
+        print("1) Generate mnemonic")
+        print("2) Import mnemonic")
+        print("3) Master private key and chain code")
+        print("4) Master public key")
+        print("5) Child key (m/0)")
+        print("6) Child key at index N")
+        print("7) Child key at index N, level M")
+        print("8) Custom derivation path")
         print("q) Quit")
         choice = input("> ")
 
@@ -114,6 +220,18 @@ def main():
             generate()
         elif choice == "2":
             import_phrase()
+        elif choice == "3":
+            master()
+        elif choice == "4":
+            master_public()
+        elif choice == "5":
+            child()
+        elif choice == "6":
+            child_at_index()
+        elif choice == "7":
+            child_at_index_and_level()
+        elif choice == "8":
+            custom_path()
         elif choice == "q":
             break
         else:
